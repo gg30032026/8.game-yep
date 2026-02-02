@@ -20,8 +20,8 @@
     /* Film strip specific */
     --film-bg: #222;
     --film-hole-color: rgba(255, 255, 255, 0.8);
-    --frame-size: 150px;
-    --gap-size: 20px;
+    --frame-size: 180px;
+    --gap-size: 24px;
     --accent-color: #FFD93D;
 }
 
@@ -121,13 +121,14 @@ body {
 /* === FILM STRIP === */
 .film-strip-viewport {
     position: relative;
-    width: 100%;
-    height: 260px;
+    width: 120%;
+    margin-left: -10%;
+    height: 320px;
     background: var(--film-bg);
     overflow: hidden;
     border: 6px solid #000;
-    border-radius: 15px;
-    box-shadow: 10px 10px 0px #000;
+    border-radius: 20px;
+    box-shadow: 12px 12px 0px #000, 0 0 40px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
 }
@@ -251,12 +252,69 @@ body {
 @keyframes heartPulse {
     0% {
         transform: translate(-50%, -50%) scale(2);
-        filter: drop-shadow(0 0 30px #FF6B6B);
+        filter: drop-shadow(0 0 30px #FF6B6B) drop-shadow(0 0 15px #fff);
     }
 
     100% {
         transform: translate(-50%, -50%) scale(2.15);
-        filter: drop-shadow(0 0 50px #FF6B6B) drop-shadow(0 0 80px rgba(255, 107, 107, 0.5));
+        filter: drop-shadow(0 0 60px #FF6B6B) drop-shadow(0 0 100px rgba(255, 107, 107, 0.6)) drop-shadow(0 0 20px #fff);
+    }
+}
+
+/* Enhanced heart glow ring */
+.breakout-frame::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: linear-gradient(45deg,
+            #FF6B6B, #FF8E8E, #FFB3B3, #FF8E8E, #FF6B6B,
+            #ff4757, #FF6B6B);
+    background-size: 400% 400%;
+    animation: gradientShift 3s ease infinite;
+    clip-path: path('M 150 30 C 100 0, 0 0, 0 90 C 0 150, 75 200, 150 270 C 225 200, 300 150, 300 90 C 300 0, 200 0, 150 30 Z');
+    z-index: -1;
+    filter: blur(15px);
+    opacity: 0.8;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Sparkle effect on heart */
+.breakout-frame::after {
+    content: '✨';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    font-size: 2rem;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0.5) rotate(0deg);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2) rotate(180deg);
     }
 }
 
@@ -1094,4 +1152,69 @@ body {
     100% {
         transform: translateX(100%);
     }
+}
+
+/* === WINNER ACTION BUTTONS === */
+.winner-actions {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10001;
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.winner-actions button {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: var(--comic-font);
+    border: 4px solid #000;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 5px 5px 0 #000;
+    transition: all 0.15s ease;
+}
+
+.winner-actions button:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0 #000;
+}
+
+.winner-actions button:active {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0 #000;
+}
+
+.btn-continue {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44CF9C 100%);
+    color: #1a1a2e;
+}
+
+.btn-continue:hover {
+    background: linear-gradient(135deg, #5de6d9 0%, #55e0ad 100%);
+}
+
+.btn-eliminate {
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-eliminate:hover {
+    background: linear-gradient(135deg, #ff8080 0%, #ff5c6a 100%);
 }

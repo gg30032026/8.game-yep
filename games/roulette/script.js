@@ -43,6 +43,10 @@ let frames = []; // The DOM elements
 let currentAssets = []; // The data (images or fake objects)
 let isDemoMode = true;
 
+// Elimination tracking (session only - resets on page refresh)
+let eliminatedPlayers = new Set(); // Store eliminated asset IDs/indices
+let lastWinnerInfo = null; // Store winner info for elimination
+
 // Audio
 const winAudio = new Audio('cheer.mp3');
 winAudio.volume = 0.5;
@@ -113,6 +117,19 @@ async function loadGameAssets(folderId) {
             console.error(e);
             return loadGameAssets('demo');
         }
+    }
+
+    // Filter out eliminated players
+    currentAssets = currentAssets.filter((asset, i) => {
+        const assetKey = asset.id || `demo-${asset.index}`;
+        return !eliminatedPlayers.has(assetKey);
+    });
+
+    // Check if all players eliminated
+    if (currentAssets.length === 0) {
+        alert('Tất cả người chơi đã bị loại! Reset lại...');
+        eliminatedPlayers.clear();
+        return loadGameAssets(folderId);
     }
 
     // Render Strip
@@ -251,11 +268,22 @@ function startSpin() {
 
 function highlightFrame(rawIndex) {
     const actualIndex = rawIndex % frames.length;
+    const assetIndex = actualIndex % currentAssets.length;
     const targetFrame = frames[actualIndex];
+    const winnerAsset = currentAssets[assetIndex];
+
+    // Store winner info for elimination
+    lastWinnerInfo = {
+        assetIndex: assetIndex,
+        asset: winnerAsset,
+        assetKey: winnerAsset.id || `demo-${winnerAsset.index}`
+    };
+
     if (targetFrame) {
         targetFrame.classList.add('active');
         createBreakoutFrame(targetFrame);
         launchFireworks();
+        showWinnerActions(); // Show action buttons
 
         // Try play audio
         const winAudio = new Audio('cheer.mp3');
@@ -263,6 +291,51 @@ function highlightFrame(rawIndex) {
         winAudio.play().catch(e => { });
     }
 }
+
+// Show action buttons after winner is selected
+function showWinnerActions() {
+    // Remove existing if any
+    const existing = document.querySelector('.winner-actions');
+    if (existing) existing.remove();
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'winner-actions';
+    actionsDiv.innerHTML = `
+        <button class="btn-continue" onclick="continueGame()">🔄 Tiếp tục</button>
+        <button class="btn-eliminate" onclick="eliminateWinner()">❌ Loại & Quay tiếp</button>
+    `;
+    document.body.appendChild(actionsDiv);
+}
+
+// Hide action buttons
+function hideWinnerActions() {
+    const existing = document.querySelector('.winner-actions');
+    if (existing) existing.remove();
+}
+
+// Continue game - just reset view
+window.continueGame = function () {
+    hideWinnerActions();
+    resetView();
+};
+
+// Eliminate winner and continue spinning
+window.eliminateWinner = function () {
+    if (lastWinnerInfo) {
+        eliminatedPlayers.add(lastWinnerInfo.assetKey);
+        console.log(`🚫 Loại người chơi: ${lastWinnerInfo.assetKey}`);
+        console.log(`📊 Còn lại: ${currentAssets.length - 1} người chơi`);
+    }
+    hideWinnerActions();
+    resetView();
+
+    // Reload assets to filter out eliminated player
+    const currentFolder = document.getElementById('folderSelect').value;
+    loadGameAssets(currentFolder).then(() => {
+        // Auto start spin after reload
+        setTimeout(() => startSpin(), 300);
+    });
+};
 
 function createBreakoutFrame(targetElement) {
     const clone = targetElement.cloneNode(true);
