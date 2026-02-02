@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: #1e1e24;
+            --accent-color: #ff4757;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-top: 50px;
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 50px;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .game-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            border-color: #333;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #333;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .badge.new {
+            background: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Game Portal</h1>
+
+    <div class="grid-container">
+        <!-- Game 1: Frame Roulette -->
+        <a href="games/roulette/index.html" class="game-card">
+            <span class="badge new">Active</span>
+            <div class="icon">🎰</div>
+            <div class="title">Frame Roulette</div>
+        </a>
+
+        <!-- Game 2: Horse Racing Chaos -->
+        <a href="games/race/index.html" class="game-card">
+            <span class="badge new">New</span>
+            <div class="icon">🐎</div>
+            <div class="title">Horse Racing Chaos</div>
+        </a>
+
+        <!-- Game 3: Placeholder -->
+        <div class="game-card disabled">
+            <span class="badge">Coming Soon</span>
+            <div class="icon">🎲</div>
+            <div class="title">Game 3</div>
+        </div>
+
+        <!-- Game 4: Placeholder -->
+        <div class="game-card disabled">
+            <span class="badge">Coming Soon</span>
+            <div class="icon">🕹️</div>
+            <div class="title">Game 4</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

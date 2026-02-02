@@ -1,0 +1,73 @@
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.cert
+secrets/
+credentials/
+
+# =========================
+# Server Runtime
+# =========================
+.host/
+*.pid
+*.log
+logs/
+
+# =========================
+# User Data (Privacy)
+# =========================
+data/roulette/
+data/*.json
+
+# =========================
+# Build & Cache
+# =========================
+dist/
+build/
+.cache/
+*.tmp
+*.temp
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# =========================
+# IDE & Editor
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# =========================
+# Gemini Agent
+# =========================
+.gemini/
+.agent/
+
+# =========================
+# Cloudflare
+# =========================
+.cloudflared/

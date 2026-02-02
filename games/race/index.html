@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐴💥 HORSE RACING CHAOS! 🏍️🔥</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Container -->
+    <div id="game-container">
+
+        <!-- CANVAS LAYER -->
+        <canvas id="raceCanvas"></canvas>
+
+        <!-- UI LAYER: LOBBY -->
+        <div id="lobbyScreen" class="ui-screen">
+            <div class="logo-box">
+                <a href="../../index.html" class="btn-back-home">🏠 VỀ TRANG CHÍNH</a>
+                <h1 class="game-title">🐴 ĐUA NGỰA <br><span class="chaos-text">HỖN LOẠN!</span> 🏍️</h1>
+                <p class="subtitle">PHIÊN BẢN HỖN LOẠN</p>
+            </div>
+
+            <div class="panel-container">
+                <div class="settings-box">
+                    <h3>⏱️ THỜI GIAN ĐUA</h3>
+                    <div class="time-options">
+                        <button class="btn-time" data-time="10">10s (Nhanh)</button>
+                        <button class="btn-time active" data-time="30">30s (Vừa)</button>
+                        <button class="btn-time chaos-mode-btn" data-time="120">
+                            🔥 2 PHÚT CHAOS!
+                        </button>
+                    </div>
+                </div>
+
+                <div class="players-box">
+                    <h3>🤠 DANH SÁCH NGƯỜI CHƠI (Max 70)</h3>
+                    <ul id="playerList">
+                        <!-- Populated by JS -->
+                    </ul>
+                    <div class="add-player-row">
+                        <textarea id="bulkPlayerInput" placeholder="Paste danh sách tên (mỗi tên 1 dòng)..."
+                            rows="5"></textarea>
+                        <button id="btnAddPlayer" class="btn-primary">➕ THÊM TẤT CẢ</button>
+                    </div>
+                </div>
+
+                <button id="btnStartRace" class="btn-mega">🐎 BẮT ĐẦU CHIẾN!</button>
+            </div>
+        </div>
+
+        <!-- UI LAYER: HUD (In Game) -->
+        <div id="hudScreen" class="ui-screen hidden">
+            <div class="top-bar">
+                <div class="timer-box">⏱️ <span id="timerDisplay">00:00</span></div>
+                <div class="rank-box">🏆 1st: <span id="leaderName">???</span></div>
+            </div>
+
+            <!-- Mobile Controls / Inventory -->
+            <div class="bottom-controls">
+                <div class="inventory-box">
+                    <div class="item-slot active">
+                        <span class="item-icon">❓</span>
+                        <span class="item-count">x0</span>
+                    </div>
+                    <p class="control-hint">SPACE / TAP to Use</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI LAYER: VICTORY -->
+        <div id="victoryScreen" class="ui-screen hidden">
+            <div class="victory-content">
+                <h2 class="victory-title">🎉 KẾT QUẢ CUỐI CÙNG 🎉</h2>
+                <div class="winner-display">
+                    <div class="winner-avatar">🏆</div>
+                    <div class="winner-name">NGUYỄN VĂN A</div>
+                    <div class="winner-vehicle" style="font-size: 1.2rem; margin-top: 5px; color: #555;"></div>
+                    <div style="font-size: 1.5rem; margin-top: 10px;">VÔ ĐỊCH THIÊN HẠ</div>
+                </div>
+
+                <div class="gangnam-dance-area">
+                    <!-- Canvas or DOM dance animation here -->
+                </div>
+
+                <div class="results-table-container">
+                    <table id="resultsTable">
+                        <!-- Populated JS -->
+                    </table>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="btnRestart" class="btn-secondary">🔄 ĐUA LẠI</button>
+                    <button id="btnLobby" class="btn-primary">🏠 VỀ LOBBY</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- AUDIO ELEMENTS -->
+    <!-- Ideally handled by AudioContext in JS, but generic tags for backup -->
+
+    <!-- Consolidated Script (Renamed to force reload) -->
+    <script src="game_v2.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 VÒNG QUAY MAY MẮN</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+    <!-- Load DB Shared Module -->
+    <script src="../../common/db.js"></script>
+    <!-- HEIC to JPEG converter for iPhone photos -->
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+
+<body>
+    <div class="game-container">
+
+        <!-- Header / Controls -->
+        <div class="top-bar">
+            <a href="../../index.html" class="back-link">🏠 VỀ TRANG CHÍNH</a>
+            <div class="deck-selector">
+                <select id="folderSelect">
+                    <option value="demo">Demo (Faces)</option>
+                    <!-- Folders injected here -->
+                </select>
+                <button id="btnManage" class="btn-icon">⚙️ Manage</button>
+            </div>
+        </div>
+
+        <div class="film-strip-viewport">
+            <!-- The detailed film strip styling will be in CSS -->
+            <div class="film-strip" id="filmStrip">
+                <!-- Faces will be injected here by JS -->
+            </div>
+            <div class="selection-indicator"></div>
+        </div>
+
+        <div class="controls">
+            <p>Press <span class="key-badge">Space</span> to Stop / Spin</p>
+        </div>
+    </div>
+
+    <!-- Management Modal -->
+    <div id="manageModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Asset Manager</h2>
+                <button id="btnCloseModal" class="close-btn">×</button>
+            </div>
+
+            <div class="manager-layout">
+                <!-- Sidebar: Folders -->
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <h3>Folders</h3>
+                        <button id="btnNewFolder" class="btn-small">+ New</button>
+                    </div>
+                    <ul id="folderList" class="folder-list">
+                        <!-- List Items -->
+                    </ul>
+                </div>
+
+                <!-- Main: Images -->
+                <div class="main-panel">
+                    <div class="panel-header">
+                        <h3 id="currentFolderName">Select a Folder</h3>
+                        <div class="actions" id="folderActions" style="display:none;">
+                            <input type="file" id="fileInput" multiple accept="image/*,.heic,.heif"
+                                style="display:none">
+                            <button id="btnUpload" class="btn-primary">📷 Upload</button>
+                            <button id="btnDeleteFolder" class="btn-danger">🗑 Folder</button>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="uploadProgress" class="upload-progress hidden">
+                        <div class="progress-text">
+                            <span id="progressLabel">Đang xử lý...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="imageGrid" class="image-grid">
+                        <p class="empty-state">Select a folder to manage images.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="confirm-overlay hidden">
+        <div class="confirm-box">
+            <div class="confirm-icon">⚠️</div>
+            <p id="confirmMessage">Bạn có chắc chắn muốn xóa?</p>
+            <div class="confirm-buttons">
+                <button id="confirmYes" class="btn-confirm-yes">✓ Yes</button>
+                <button id="confirmNo" class="btn-confirm-no">✗ No</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
