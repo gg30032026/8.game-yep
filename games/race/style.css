@@ -326,31 +326,31 @@ input {
     background: rgba(0, 0, 0, 0.85);
     border: 3px solid var(--warning);
     border-radius: 12px;
-    padding: 10px 15px;
-    min-width: 200px;
+    padding: 15px 25px;
+    min-width: 350px;
     box-shadow: 0 0 15px rgba(255, 217, 61, 0.5);
 }
 
 .lb-title {
-    font-size: 1.2rem;
+    font-size: 1.8rem;
     color: var(--warning);
     border-bottom: 2px solid var(--warning);
-    padding-bottom: 5px;
-    margin-bottom: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .lb-row {
-    font-size: 1rem;
-    padding: 4px 0;
+    font-size: 1.6rem;
+    padding: 6px 0;
     display: flex;
-    gap: 8px;
+    gap: 12px;
     color: white;
 }
 
 .lb-row:first-of-type {
     color: var(--warning);
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.8rem;
 }
 
 .lb-row:nth-of-type(2) {
@@ -364,14 +364,14 @@ input {
 }
 
 .lb-pos {
-    min-width: 25px;
+    min-width: 40px;
 }
 
 .lb-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 280px;
 }
 
 .bottom-controls {
