@@ -170,54 +170,53 @@ class Horse {
             this.isSurging = false;
         }
 
-        // === RUBBER-BANDING: EXTREME - Keep 35+ horses visible ===
-        // Immediately activate when behind and FORCE catch up
-        if (this.distanceToLeader > 20) {
-            // Behind - EXTREME boost to keep pack VERY tight
-            const boostFactor = Math.min(this.distanceToLeader / 50, 1.5); // Up to 150% boost, instant scaling
-            targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
-
-            // VERY high burst chance to catch up immediately
-            if (this.stamina > 10 && Math.random() < 0.35) {
-                targetSpeed = this.maxSpeed * 1.5; // INSTANT CATCH UP!
-            }
-        }
-
-        // === PACK COMPRESSION - EXTREME for last 30 seconds ===
-        // FORCE all horses to stay within 200px of leader (screen width)
+        // === PACK COMPRESSION - Calculate race progress first ===
         const distanceToFinish = finishX - this.x;
         const raceProgress = 1 - (distanceToFinish / finishX);
         const isLast30Seconds = raceProgress > 0.5; // Last half = last ~30s in 60s race
 
-        if (isLast30Seconds) {
-            // EXTREME compression - anyone more than 100px behind gets MAX speed
-            if (this.distanceToLeader > 100) {
-                targetSpeed = this.maxSpeed * 1.8; // WARP SPEED to catch up!
-            } else if (this.distanceToLeader > 50) {
-                targetSpeed = Math.max(targetSpeed, this.maxSpeed * 1.2);
+        // === HARD CAP: GUARANTEE 35+ horses visible in last 30s ===
+        // Maximum allowed distance from leader = 150px (screen shows ~800px)
+        const MAX_ALLOWED_DISTANCE = isLast30Seconds ? 150 : 300;
+
+        if (this.distanceToLeader > MAX_ALLOWED_DISTANCE) {
+            // TELEPORT to catch up! Force position closer to leader
+            this.x = leaderX - MAX_ALLOWED_DISTANCE + Math.random() * 50;
+            this.distanceToLeader = leaderX - this.x;
+        }
+
+        // === RUBBER-BANDING: EXTREME ===
+        if (this.distanceToLeader > 10) {
+            // Behind - EXTREME boost
+            const boostFactor = Math.min(this.distanceToLeader / 30, 2.0); // Up to 200% boost
+            targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
+
+            // VERY high burst chance
+            if (Math.random() < 0.4) {
+                targetSpeed = this.maxSpeed * 1.6;
             }
         }
 
         // === CONSTANT POSITION SWAPPING ===
         // High frequency random speed changes for exciting position battles
-        if (Math.random() < 0.15) { // 15% chance each frame = constant changes
+        if (Math.random() < 0.2) { // 20% chance each frame = constant changes
             if (Math.random() < 0.5) {
-                targetSpeed = this.maxSpeed * (1.0 + Math.random() * 0.3); // Speed up
+                targetSpeed = this.maxSpeed * (1.0 + Math.random() * 0.4); // Speed up
             } else {
-                targetSpeed = this.baseSpeed * (0.7 + Math.random() * 0.3); // Slow down
+                targetSpeed = this.baseSpeed * (0.6 + Math.random() * 0.4); // Slow down
             }
         }
 
         // === FINAL SPRINT: Last 500px - CHAOS ===
         if (distanceToFinish < 500 && distanceToFinish > 0) {
             // ALL positions can surge - pure chaos
-            if (Math.random() < 0.3) {
-                targetSpeed = this.maxSpeed * (1.5 + Math.random() * 1.0); // Up to 2.5x speed!
+            if (Math.random() < 0.35) {
+                targetSpeed = this.maxSpeed * (1.5 + Math.random() * 1.0);
             }
 
-            // Random slowdowns for leaders to keep it exciting
-            if (position <= 2 && Math.random() < 0.2) {
-                targetSpeed = this.baseSpeed * 0.5;
+            // Random slowdowns for leaders
+            if (position <= 3 && Math.random() < 0.25) {
+                targetSpeed = this.baseSpeed * 0.4;
             }
         }
 
