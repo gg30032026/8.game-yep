@@ -121,11 +121,26 @@ class Horse {
                 this.slideVelocity *= 0.95; // Friction
             }
 
+            // Smooth recovery animation when about to stand up (last 0.3s of stun)
+            if (this.stunTimer <= 0.3 && this.stunTimer > 0) {
+                this.isRecovering = true;
+                // Smoothly rotate back to standing position
+                this.fallRotation = this.fallRotation * 0.85; // Lerp towards 0
+            }
+
             if (this.stunTimer <= 0) {
                 this.isFalling = false;
+                this.isRecovering = false;
                 this.fallRotation = 0;
             }
             return;
+        }
+
+        // Smooth transition after stun ends - continue recovery if needed
+        if (this.fallRotation > 0.01) {
+            this.fallRotation *= 0.9; // Continue smooth recovery
+        } else {
+            this.fallRotation = 0;
         }
 
         // 1. Stamina Management
@@ -174,10 +189,26 @@ class Horse {
         const distanceToFinish = finishX - this.x;
         const raceProgress = 1 - (distanceToFinish / finishX);
         const isLast30Seconds = raceProgress > 0.5; // Last half = last ~30s in 60s race
+        const isLast10Seconds = raceProgress > 0.83; // Last ~10s
 
-        // === HARD CAP: GUARANTEE 35+ horses visible in last 30s ===
-        // Maximum allowed distance from leader = 150px (screen shows ~800px)
-        const MAX_ALLOWED_DISTANCE = isLast30Seconds ? 150 : 300;
+        // === PROGRESSIVE PACK CONTROL ===
+        // 30s-10s cuối: tight pack (~35 horses visible, 150px spread)
+        // 10s cuối: spread out (~10 horses at front, let others fall behind)
+        let MAX_ALLOWED_DISTANCE;
+
+        if (isLast10Seconds) {
+            // Final 10s - let trailing horses fall behind naturally
+            // Only top ~10 will stay close, others spread out
+            if (this.racePosition < 10) {
+                MAX_ALLOWED_DISTANCE = 200; // Top 10 stay close
+            } else {
+                MAX_ALLOWED_DISTANCE = 800 + this.racePosition * 20; // Others spread out
+            }
+        } else if (isLast30Seconds) {
+            MAX_ALLOWED_DISTANCE = 150; // Keep pack tight
+        } else {
+            MAX_ALLOWED_DISTANCE = 300;
+        }
 
         if (this.distanceToLeader > MAX_ALLOWED_DISTANCE) {
             // TELEPORT to catch up! Force position closer to leader
