@@ -51,6 +51,11 @@ let lastWinnerInfo = null; // Store winner info for elimination
 const winAudio = new Audio('cheer.mp3');
 winAudio.volume = 0.5;
 
+// Background music
+const bgMusic = new Audio('nhac xo so.mp3');
+bgMusic.loop = true;
+bgMusic.volume = 1.0;
+
 // Fireworks
 const canvas = document.createElement('canvas');
 canvas.id = 'fireworks';
@@ -213,7 +218,7 @@ function finalizeStop() {
     // The film-strip has padding that already centers frames
     // Frame N is at center when: scroll = N * ITEM_FULL_WIDTH
     const centerIndex = Math.round(currentScroll / ITEM_FULL_WIDTH);
-    
+
     // Calculate scroll position that puts centerIndex frame at center
     const snappedScroll = centerIndex * ITEM_FULL_WIDTH;
 
@@ -268,8 +273,9 @@ function toggleGameState() {
 function startSpin() {
     resetView(); // ensure clean state
 
-    const winAudio = new Audio('cheer.mp3');
-    winAudio.volume = 0.5;
+    // Start background music
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(e => console.log('Audio play failed:', e));
 
     gameState = 'SPINNING';
     speed = MAX_SPEED;
@@ -278,9 +284,10 @@ function startSpin() {
     gameLoop();
 }
 
-// NEW: Highlight frame by exact frame index and asset index
-// This ensures the exact frame under the arrow is the winner
 function highlightFrameByIndex(frameIndex, assetIndex) {
+    // Stop background music
+    bgMusic.pause();
+
     const targetFrame = frames[frameIndex];
     const winnerAsset = currentAssets[assetIndex];
 
