@@ -36,7 +36,7 @@ class Horse {
         this.jockeyColor = config.jockeyColor || "#FF0000"; // Default Red
 
         // Stats
-        this.baseSpeed = 120 + Math.random() * 100;
+        this.baseSpeed = 80 + Math.random() * 60;
         this.maxSpeed = 300 + Math.random() * 100;
         this.speed = 0;
         this.acceleration = 50 + Math.random() * 50;
@@ -893,8 +893,8 @@ class Game {
         this.lastTime = 0;
 
         // Race configuration
-        this.raceDuration = 30; // Default 30 seconds
-        this.finishX = 6000; // Will be calculated based on raceDuration (duration * 200)
+        this.raceDuration = 60; // Default 60 seconds (1 minute)
+        this.finishX = 12000; // Will be calculated based on raceDuration (duration * 200)
         this.raceStartTime = 0; // Track when race started
         this.elapsedTime = 0; // Track elapsed race time
 
