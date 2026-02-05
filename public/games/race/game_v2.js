@@ -9,18 +9,34 @@ function escapeHtml(text) {
 class AudioManager {
     constructor() {
         this.synth = window.speechSynthesis;
+        // Background music
+        this.bgMusic = new Audio('src/The Lone Ranger Theme Song - (320 Kbps).mp3');
+        this.bgMusic.loop = true;
+        this.bgMusic.volume = 0.5;
     }
 
     play(soundName) {
-        // Simple announcements
-        if (soundName === 'start') this.speak("Cuộc đua bắt đầu!");
-        if (soundName === 'win') this.speak("Người chiến thắng!");
+        if (soundName === 'start') {
+            // Play background music when race starts
+            this.bgMusic.currentTime = 0;
+            this.bgMusic.play().catch(e => console.log('Audio play failed:', e));
+        }
+        if (soundName === 'win') {
+            // Stop music when race ends
+            this.bgMusic.pause();
+            this.speak("Người chiến thắng!");
+        }
     }
 
     speak(text) {
         if (this.synth.speaking) return;
         const utter = new SpeechSynthesisUtterance(text);
         this.synth.speak(utter);
+    }
+
+    stopMusic() {
+        this.bgMusic.pause();
+        this.bgMusic.currentTime = 0;
     }
 }
 
