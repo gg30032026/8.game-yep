@@ -77,6 +77,7 @@ class Horse {
         this.fallRotation = 0;
         this.slideVelocity = 0;
         this.recoveryGraceTimer = 0; // Grace period after standing up
+        this.isMegaBoosting = false; // Track mega boost state
 
         // Attack animation (kick/headbutt)
         this.isAttacking = false;
@@ -168,19 +169,35 @@ class Horse {
         // 2. Speed Calculation with COMEBACK MECHANICS
         let targetSpeed = this.baseSpeed;
         this.distanceToLeader = leaderX - this.x;
-
-        // === PERIODIC SURGE: Every 10 seconds, trailing horses get boost ===
-        const surgeWindow = raceElapsed % 10; // 0-10 second cycle
-        const isSurgeTime = surgeWindow >= 8 && surgeWindow <= 10; // Last 2 seconds of each 10s cycle
         const position = this.racePosition || 0;
 
+        // === MEGA BOOST: Every 20 seconds, positions 35-36 get SUPER boost to reach top 3 ===
+        const megaBoostCycle = Math.floor(raceElapsed / 20); // Which 20s cycle we're in
+        const megaBoostWindow = raceElapsed % 20;
+        const isMegaBoostTime = megaBoostWindow >= 0 && megaBoostWindow <= 5; // First 5 seconds of each 20s cycle
+
+        if (isMegaBoostTime && (position === 34 || position === 35)) {
+            // MEGA BOOST - make these horses fly to top 3!
+            targetSpeed = this.maxSpeed * 3.0; // 3x max speed!
+            this.stamina = 100; // Full stamina during boost
+            if (!this.isMegaBoosting) {
+                console.log(`🔥🔥 MEGA BOOST: ${this.name} (vị trí ${position + 1}) bứt phá lên top!`);
+                this.isMegaBoosting = true;
+            }
+        } else {
+            this.isMegaBoosting = false;
+        }
+
+        // === PERIODIC SURGE: Every 10 seconds, trailing horses get boost ===
+        const surgeWindow = raceElapsed % 10;
+        const isSurgeTime = surgeWindow >= 8 && surgeWindow <= 10;
+
         if (isSurgeTime) {
-            // Trailing horses (position 3+) get MASSIVE surge chance
+            // Trailing horses (position 3+) get surge chance
             if (position >= 3 && this.stamina > 20) {
-                if (Math.random() < 0.5) { // 50% chance per frame during surge window
+                if (Math.random() < 0.5) {
                     targetSpeed = this.maxSpeed * 1.8;
                     if (!this.isSurging) {
-                        console.log(`🚀 ${this.name} (vị trí ${position + 1}) bứt phá!`);
                         this.isSurging = true;
                     }
                 }
