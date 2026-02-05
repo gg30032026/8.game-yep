@@ -51,9 +51,9 @@ class Horse {
         // Jockey Color
         this.jockeyColor = config.jockeyColor || "#FF0000"; // Default Red
 
-        // Stats
-        this.baseSpeed = 80 + Math.random() * 60;
-        this.maxSpeed = 300 + Math.random() * 100;
+        // Stats - reduced variance to keep horses closer together
+        this.baseSpeed = 100 + Math.random() * 30; // Less variance = tighter pack
+        this.maxSpeed = 280 + Math.random() * 60;  // Less variance for max too
         this.speed = 0;
         this.acceleration = 50 + Math.random() * 50;
 
@@ -170,15 +170,16 @@ class Horse {
             this.isSurging = false;
         }
 
-        // === RUBBER-BANDING: Horses behind get speed boost ===
-        if (this.distanceToLeader > 100) {
-            // Significantly behind - get a boost!
-            const boostFactor = Math.min(this.distanceToLeader / 400, 0.6); // Up to 60% boost
+        // === RUBBER-BANDING: Keep horses close together ===
+        // Activate earlier (50px behind) and stronger boost to keep pack tight
+        if (this.distanceToLeader > 50) {
+            // Behind - get a boost to catch up
+            const boostFactor = Math.min(this.distanceToLeader / 200, 0.8); // Up to 80% boost, faster scaling
             targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
 
-            // Higher chance of burst when behind
-            if (this.stamina > 30 && Math.random() < 0.12) {
-                targetSpeed = this.maxSpeed * 1.2; // SUPER BURST!
+            // Very high chance of burst when behind to catch up quickly
+            if (this.stamina > 20 && Math.random() < 0.2) {
+                targetSpeed = this.maxSpeed * 1.3; // CATCH UP BURST!
             }
         }
 
