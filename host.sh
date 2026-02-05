@@ -1,18 +1,29 @@
 #!/bin/bash
 # Game Portal Host - Start/Stop/Status Script
 # Usage: ./host.sh [start|stop|status]
+# Note: Uses caffeinate to prevent sleep when MacBook lid is closed (while plugged in)
 
 PROJECT_DIR="/Users/vdat/Desktop/Dat/CODE/5.game"
 GAME_DIR="$PROJECT_DIR/public"  # Serve only public folder for security
 PID_DIR="$PROJECT_DIR/.host"
 HTTP_PID="$PID_DIR/http.pid"
 TUNNEL_PID="$PID_DIR/tunnel.pid"
+CAFFEINATE_PID="$PID_DIR/caffeinate.pid"
 LOG_DIR="$PID_DIR/logs"
 
 mkdir -p "$PID_DIR" "$LOG_DIR"
 
 start() {
     echo "🚀 Starting Game Portal hosting..."
+    
+    # Start caffeinate to prevent sleep when lid is closed (while on power)
+    if [ -f "$CAFFEINATE_PID" ] && kill -0 $(cat "$CAFFEINATE_PID") 2>/dev/null; then
+        echo "☕ Caffeinate already running (PID: $(cat $CAFFEINATE_PID))"
+    else
+        nohup caffeinate -s > /dev/null 2>&1 &
+        echo $! > "$CAFFEINATE_PID"
+        echo "☕ Caffeinate started - Mac will stay awake when lid closed (PID: $!)"
+    fi
     
     # Check if already running
     if [ -f "$HTTP_PID" ] && kill -0 $(cat "$HTTP_PID") 2>/dev/null; then
@@ -35,6 +46,7 @@ start() {
     sleep 2
     echo ""
     echo "🌐 Website live at: https://datnv.online"
+    echo "💡 Tip: You can now close MacBook lid - server will keep running!"
 }
 
 stop() {
@@ -50,6 +62,11 @@ stop() {
         rm -f "$TUNNEL_PID"
     fi
     
+    if [ -f "$CAFFEINATE_PID" ]; then
+        kill $(cat "$CAFFEINATE_PID") 2>/dev/null && echo "☕ Caffeinate stopped - Mac can sleep normally" || echo "⚠️  Caffeinate not running"
+        rm -f "$CAFFEINATE_PID"
+    fi
+    
     # Also kill any orphaned processes
     pkill -f "node server.js" 2>/dev/null
     pkill -f "cloudflared tunnel run game-portal" 2>/dev/null
@@ -60,6 +77,12 @@ stop() {
 status() {
     echo "📊 Game Portal Status"
     echo "====================="
+    
+    if [ -f "$CAFFEINATE_PID" ] && kill -0 $(cat "$CAFFEINATE_PID") 2>/dev/null; then
+        echo "☕ Caffeinate: Active - Mac stays awake when lid closed"
+    else
+        echo "😴 Caffeinate: Inactive - Mac will sleep when lid closed"
+    fi
     
     if [ -f "$HTTP_PID" ] && kill -0 $(cat "$HTTP_PID") 2>/dev/null; then
         echo "🟢 HTTP Server: Running (PID: $(cat $HTTP_PID))"

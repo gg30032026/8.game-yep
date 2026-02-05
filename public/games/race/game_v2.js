@@ -1,3 +1,10 @@
+// --- 0. Security Helper ---
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // --- 1. Audio Manager ---
 class AudioManager {
     constructor() {
@@ -29,7 +36,7 @@ class Horse {
         this.jockeyColor = config.jockeyColor || "#FF0000"; // Default Red
 
         // Stats
-        this.baseSpeed = 150 + Math.random() * 50;
+        this.baseSpeed = 120 + Math.random() * 100;
         this.maxSpeed = 300 + Math.random() * 100;
         this.speed = 0;
         this.acceleration = 50 + Math.random() * 50;
@@ -589,11 +596,11 @@ class Renderer {
         // 1. Logical Size (Screen size)
         this.width = window.innerWidth;
 
-        // Calculate required height for players (80px per lane + buffer)
-        // Only if game has started and players exist
-        const requiredHeight = (this.game.players && this.game.players.length > 0)
-            ? (this.game.players.length * 80) + 300
-            : window.innerHeight;
+        // Calculate required height for players - dynamic per-lane height
+        // For 70 horses, use smaller lanes (20px) to fit on screen
+        const numPlayers = (this.game.players && this.game.players.length > 0) ? this.game.players.length : 8;
+        const laneHeightEstimate = Math.max(20, Math.min(80, Math.floor((window.innerHeight - 150) / numPlayers)));
+        const requiredHeight = (numPlayers * laneHeightEstimate) + 150;
 
         // Use greater of Window height or Required height
         this.height = Math.max(window.innerHeight, requiredHeight);
@@ -608,23 +615,25 @@ class Renderer {
         // We want smooth curves for vector art style
         this.ctx.imageSmoothingEnabled = true;
 
-        this.laneHeight = 80; // Fixed lane height
-        this.startY = 150;
+        this.laneHeight = laneHeightEstimate; // Dynamic lane height
+        this.startY = 80;
 
-        console.log(`RESIZE: ${this.width}x${this.height} @ ${dpr}x`);
+        console.log(`RESIZE: ${this.width}x${this.height} @ ${dpr}x, lanes=${numPlayers}, laneHeight=${this.laneHeight}`);
     }
 
     initRace(players) {
         this.resize();
 
         // === DYNAMIC LANE HEIGHT: Fit all horses inside track ===
-        const trackTopMargin = 100; // Space for timer/HUD
-        const trackBottomMargin = 100; // Space at bottom
+        const trackTopMargin = 80; // Space for timer/HUD
+        const trackBottomMargin = 50; // Space at bottom
         const availableHeight = this.height - trackTopMargin - trackBottomMargin;
 
-        // Calculate lane height to fit all players
+        // Calculate lane height to fit ALL players - no minimum, allow overlap/small lanes
         const numPlayers = players.length;
-        this.laneHeight = Math.max(30, Math.min(80, Math.floor(availableHeight / numPlayers)));
+        // Remove min limit - let lanes be as small as needed to fit all horses
+        // Max 80px for comfort, but can go down to 10px if needed for 70+ horses
+        this.laneHeight = Math.max(10, Math.min(80, Math.floor(availableHeight / numPlayers)));
         this.startY = trackTopMargin;
 
         console.log(`TRACK: ${numPlayers} players, laneHeight=${this.laneHeight}px, availableHeight=${availableHeight}px`);
@@ -643,7 +652,7 @@ class Renderer {
     }
 
     update(dt) {
-        const finishX = 3000;
+        const finishX = this.game.finishX || 3000; // Use dynamic finishX from game
         let leaderX = 0;
         if (this.runners.length > 0) {
             const leader = this.runners.reduce((max, r) => r.x > max.x ? r : max, this.runners[0]);
@@ -699,8 +708,8 @@ class Renderer {
         }
         this.ctx.stroke();
 
-        // Finish Line
-        const finishX = 3000;
+        // Finish Line - use dynamic finishX from game
+        const finishX = this.game.finishX || 3000;
         this.drawFinishLine(finishX, this.startY, trackHeight);
 
         // Distance Markers
@@ -883,23 +892,63 @@ class Game {
         this.players = [];
         this.lastTime = 0;
 
+        // Race configuration
+        this.raceDuration = 30; // Default 30 seconds
+        this.finishX = 6000; // Will be calculated based on raceDuration (duration * 200)
+        this.raceStartTime = 0; // Track when race started
+        this.elapsedTime = 0; // Track elapsed race time
+
         this.initLobbyEvents();
         this.loop = this.loop.bind(this);
         requestAnimationFrame(this.loop);
     }
 
     initLobbyEvents() {
-        // Mock players (Examples)
-        this.players = [];
-        const colors = ["#2C2C2C", "#E0E0E0", "#8B4513", "#A52A2A", "#D2691E", "#F4A460", "#2F4F4F", "#000000", "#FFFFFF", "#808080"];
-        for (let i = 1; i <= 10; i++) {
-            this.players.push({
-                name: `Ngựa Đua ${i}`,
-                color: colors[i % colors.length],
-                jockeyColor: `hsl(${Math.random() * 360}, 80%, 50%)`
-            });
+        // Load players from localStorage or use defaults
+        const savedPlayers = localStorage.getItem('raceGamePlayers');
+        if (savedPlayers) {
+            try {
+                this.players = JSON.parse(savedPlayers);
+                console.log(`Loaded ${this.players.length} players from session`);
+            } catch (e) {
+                this.players = [];
+            }
+        }
+
+        // If no saved players, create defaults
+        if (this.players.length === 0) {
+            const colors = ["#2C2C2C", "#E0E0E0", "#8B4513", "#A52A2A", "#D2691E", "#F4A460", "#2F4F4F", "#000000", "#FFFFFF", "#808080"];
+            for (let i = 1; i <= 10; i++) {
+                this.players.push({
+                    name: `Ngựa Đua ${i}`,
+                    color: colors[i % colors.length],
+                    jockeyColor: `hsl(${Math.random() * 360}, 80%, 50%)`
+                });
+            }
         }
         this.updatePlayerList();
+
+        // === TIME SELECTION BUTTONS ===
+        document.querySelectorAll('.btn-time').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.btn-time').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                e.target.classList.add('active');
+
+                // Set race duration
+                this.raceDuration = parseInt(e.target.dataset.time);
+                // Calculate finish distance: ~200 pixels per second of race time (avg speed ~170)
+                this.finishX = this.raceDuration * 200;
+
+                console.log(`Race time set to ${this.raceDuration}s, finishX=${this.finishX}`);
+
+                // Show chaos mode alert for 2 minute race
+                if (this.raceDuration >= 60) {
+                    alert("🔥 CHẾ ĐỘ CHAOS! Cuộc đua dài 1 phút sẽ có nhiều hỗn loạn hơn!");
+                }
+            });
+        });
 
         document.getElementById('btnAddPlayer').addEventListener('click', () => {
             const input = document.getElementById('bulkPlayerInput');
@@ -926,6 +975,7 @@ class Game {
 
             if (addedCount > 0) {
                 this.updatePlayerList();
+                this.savePlayers(); // Save to localStorage
                 input.value = '';
             } else {
                 alert("Đã đủ 70 người hoặc không có tên hợp lệ!");
@@ -954,8 +1004,8 @@ class Game {
             li.className = 'player-item';
             li.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="display:inline-block; width:20px; height:20px; background:${p.color}; border-radius:50%; border:2px solid #333;"></span>
-                    <span style="font-weight:bold;">🏇 ${p.name}</span>
+                    <span style="display:inline-block; width:20px; height:20px; background:${escapeHtml(p.color)}; border-radius:50%; border:2px solid #333;"></span>
+                    <span style="font-weight:bold;">🏇 ${escapeHtml(p.name)}</span>
                 </div>
                 <button class="btn-delete-player" data-index="${index}" style="background:#ff4757; color:white; border:none; border-radius:5px; padding:5px 10px; cursor:pointer; font-weight:bold;">✕</button>
             `;
@@ -968,6 +1018,7 @@ class Game {
                 const index = parseInt(e.target.dataset.index);
                 this.players.splice(index, 1);
                 this.updatePlayerList();
+                this.savePlayers(); // Save to localStorage
             });
         });
     }
@@ -975,6 +1026,11 @@ class Game {
     startRace() {
         console.log("Starting Standard Race...");
         this.state = 'RACING';
+
+        // Initialize race timer
+        this.raceStartTime = Date.now();
+        this.elapsedTime = 0;
+
         const lobby = document.getElementById('lobbyScreen');
         if (lobby) lobby.classList.add('hidden');
 
@@ -992,8 +1048,8 @@ class Game {
         if (this.state === 'RACING') {
             this.renderer.update(dt);
 
-            // Check for Finish
-            const finishX = 3000;
+            // Check for Finish - use dynamic finishX
+            const finishX = this.finishX || 3000;
 
             // === TRACK RACE POSITIONS FOR RANDOM SURGE ===
             const sortedRunners = [...this.renderer.runners].sort((a, b) => b.x - a.x);
@@ -1015,6 +1071,15 @@ class Game {
             // UI Update
             const nameEl = document.getElementById('leaderName');
             if (nameEl) nameEl.innerText = "Leader: " + leader.name;
+
+            // Update Timer Display
+            this.elapsedTime = (Date.now() - this.raceStartTime) / 1000; // Convert to seconds
+            const minutes = Math.floor(this.elapsedTime / 60);
+            const seconds = Math.floor(this.elapsedTime % 60);
+            const timerEl = document.getElementById('timerDisplay');
+            if (timerEl) {
+                timerEl.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
 
             // Check if ALL finished or just leader?
             if (leader.x >= finishX && this.state !== 'FINISHED') {
@@ -1158,6 +1223,9 @@ class Game {
         this.state = 'FINISHED';
         this.audio.play('win');
 
+        // Calculate winner's finish time
+        const winnerFinishTime = this.elapsedTime;
+
         // Sort results by X position (descending) to get order
         const results = [...this.renderer.runners].sort((a, b) => b.x - a.x);
 
@@ -1168,13 +1236,21 @@ class Game {
 
         // Populate Winner
         const winnerNameEl = vicScreen.querySelector('.winner-name');
-        if (winnerNameEl) winnerNameEl.textContent = winner.name;
+        if (winnerNameEl) winnerNameEl.textContent = winner.name; // textContent is safe
 
         // Add Vehicle Type text safely
         const vehicleDiv = vicScreen.querySelector('.winner-vehicle');
         if (vehicleDiv) vehicleDiv.innerText = `Thắng bằng: ${winner.type === 'EXCITER' ? '🏍️ EXCITER' : '🐴 NGỰA CHIẾN'}`;
 
-        // Populate Table
+        // Helper function to format time as MM:SS.ms
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        };
+
+        // Populate Table with finish times
         const table = document.getElementById('resultsTable');
         if (table) {
             table.innerHTML = `
@@ -1182,25 +1258,66 @@ class Game {
                     <tr>
                         <th style="width: 50px;">#</th>
                         <th>Tên Cao Bồi</th>
-                        <th>Khoảng cách</th>
+                        <th>Thời gian về đích</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${results.map((r, i) => `
-                        <tr>
-                            <td>${i + 1}</td>
-                            <td>${r.name}</td>
-                            <td>${i === 0 ? "WINNER" : "-" + Math.round(winner.x - r.x) + "px"}</td>
-                        </tr>
-                    `).join('')}
+                    ${results.map((r, i) => {
+                // Calculate finish time based on position gap
+                // Approximation: horses behind finish proportionally later
+                const distanceGap = winner.x - r.x;
+                const timeGap = (distanceGap / winner.x) * winnerFinishTime;
+                const finishTime = i === 0 ? winnerFinishTime : winnerFinishTime + timeGap;
+
+                return `
+                            <tr>
+                                <td>${i + 1}</td>
+                                <td>${escapeHtml(r.name)}</td>
+                                <td>${i === 0 ? '🏆 ' + formatTime(finishTime) : formatTime(finishTime)}</td>
+                            </tr>
+                        `;
+            }).join('')}
                 </tbody>
             `;
         }
 
         const btnRestart = document.getElementById('btnRestart');
-        btnRestart.onclick = () => location.reload();
+        btnRestart.onclick = () => this.restartRace();
         const btnLobby = document.getElementById('btnLobby');
-        btnLobby.onclick = () => location.reload();
+        btnLobby.onclick = () => this.backToLobby();
+    }
+
+    // Save players to localStorage
+    savePlayers() {
+        localStorage.setItem('raceGamePlayers', JSON.stringify(this.players));
+    }
+
+    // Restart race with same players
+    restartRace() {
+        this.state = 'RACING';
+        this.raceStartTime = Date.now();
+        this.elapsedTime = 0;
+
+        // Hide victory, show HUD
+        document.getElementById('victoryScreen').classList.add('hidden');
+        document.getElementById('hudScreen').classList.remove('hidden');
+
+        // Re-init race with existing players
+        this.renderer.initRace(this.players);
+        this.audio.play('start');
+    }
+
+    // Back to lobby
+    backToLobby() {
+        this.state = 'LOBBY';
+
+        // Hide victory, show lobby
+        document.getElementById('victoryScreen').classList.add('hidden');
+        document.getElementById('hudScreen').classList.add('hidden');
+        document.getElementById('lobbyScreen').classList.remove('hidden');
+
+        // Refresh player list
+        this.updatePlayerList();
     }
 
     render() {

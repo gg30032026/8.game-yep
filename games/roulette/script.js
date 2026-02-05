@@ -210,18 +210,28 @@ function finalizeStop() {
     gameState = 'STOPPED';
     cancelAnimationFrame(animationId);
 
-    // Snap to nearest frame
-    const index = Math.round(currentScroll / ITEM_FULL_WIDTH);
-    const snappedScroll = index * ITEM_FULL_WIDTH;
+    // Get viewport width to calculate center offset
+    const viewport = document.querySelector('.film-strip-viewport');
+    const viewportWidth = viewport ? viewport.offsetWidth : window.innerWidth;
 
-    filmStrip.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-    filmStrip.style.transform = `translateX(-${snappedScroll}px)`;
+    // Arrow is at center of viewport
+    const centerOffset = (viewportWidth / 2) - (FRAME_WIDTH / 2);
+    const arrowPosition = currentScroll + centerOffset;
 
-    setTimeout(() => {
-        filmStrip.style.transition = 'none';
-        currentScroll = snappedScroll;
-        highlightFrame(index);
-    }, 500);
+    // Calculate which frame is directly under the arrow - NO SNAPPING
+    // Floor to get the frame that's mostly under the arrow
+    const rawIndex = Math.floor(arrowPosition / ITEM_FULL_WIDTH);
+
+    // Modulo to get actual frame in the strip (since frames repeat in cycles)
+    const frameIndex = ((rawIndex % frames.length) + frames.length) % frames.length;
+
+    // Also calculate asset index for the winner
+    const assetIndex = ((rawIndex % currentAssets.length) + currentAssets.length) % currentAssets.length;
+
+    // NO ANIMATION - Just stop exactly where we are
+    // The frame under the arrow is the winner, no need to snap
+
+    highlightFrameByIndex(frameIndex, assetIndex);
 }
 
 // ... (Rest of Interaction / Highlight / Fireworks logic is generic and keeps working) ...
@@ -266,9 +276,37 @@ function startSpin() {
     gameLoop();
 }
 
+// NEW: Highlight frame by exact frame index and asset index
+// This ensures the exact frame under the arrow is the winner
+function highlightFrameByIndex(frameIndex, assetIndex) {
+    const targetFrame = frames[frameIndex];
+    const winnerAsset = currentAssets[assetIndex];
+
+    // Store winner info for elimination
+    lastWinnerInfo = {
+        assetIndex: assetIndex,
+        asset: winnerAsset,
+        assetKey: winnerAsset.id || `demo-${winnerAsset.index}`
+    };
+
+    if (targetFrame) {
+        targetFrame.classList.add('active');
+        createBreakoutFrame(targetFrame);
+        launchFireworks();
+        showWinnerActions(); // Show action buttons
+
+        // Try play audio
+        const winAudio = new Audio('cheer.mp3');
+        winAudio.volume = 0.5;
+        winAudio.play().catch(e => { });
+    }
+}
+
 function highlightFrame(rawIndex) {
+    // Chỉ cần modulo với số assets thực tế để tìm đúng người thắng
+    const assetIndex = rawIndex % currentAssets.length;
+    // Frame index dùng để tìm DOM element tương ứng
     const actualIndex = rawIndex % frames.length;
-    const assetIndex = actualIndex % currentAssets.length;
     const targetFrame = frames[actualIndex];
     const winnerAsset = currentAssets[assetIndex];
 
