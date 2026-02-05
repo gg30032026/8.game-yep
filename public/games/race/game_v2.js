@@ -200,21 +200,49 @@ class Horse {
         }
 
         // === NATURAL RUBBER-BANDING (light, random) ===
-        // No forced pack compression - pure random racing
         const distanceToFinish = finishX - this.x;
+        const raceProgress = 1 - (distanceToFinish / finishX);
+        const isLast30Seconds = raceProgress > 0.5; // Last half = last ~30s
 
         if (this.distanceToLeader > 300) {
-            // Light catch-up boost for very far behind horses
-            const boostFactor = Math.min(this.distanceToLeader / 500, 0.4); // Max 40% boost
+            const boostFactor = Math.min(this.distanceToLeader / 500, 0.4);
             targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
         }
 
-        // === RANDOM SPEED VARIATIONS ===
-        if (Math.random() < 0.08) { // 8% chance - more natural
-            if (Math.random() < 0.5) {
-                targetSpeed = this.maxSpeed * (0.9 + Math.random() * 0.2);
-            } else {
-                targetSpeed = this.baseSpeed * (0.7 + Math.random() * 0.3);
+        // === LAST 30 SECONDS: CONSTANT POSITION CHANGES ===
+        if (isLast30Seconds) {
+            // Leader rotation every 5 seconds - leader gets tired
+            const cycleTime = raceElapsed % 5;
+            if (position === 0 && cycleTime < 1) {
+                // First second of each 5s cycle - leader stumbles hard
+                if (Math.random() < 0.4) {
+                    targetSpeed = this.baseSpeed * 0.3; // Heavy slowdown!
+                }
+            }
+
+            // Positions 2-5 get strong boost to challenge leader
+            if (position >= 1 && position <= 4 && cycleTime >= 3) {
+                if (Math.random() < 0.5) {
+                    targetSpeed = this.maxSpeed * 1.4;
+                }
+            }
+
+            // Random speed chaos for all - constant position changes
+            if (Math.random() < 0.2) { // 20% each frame in final stretch
+                if (Math.random() < 0.5) {
+                    targetSpeed = this.maxSpeed * (1.1 + Math.random() * 0.3);
+                } else {
+                    targetSpeed = this.baseSpeed * (0.5 + Math.random() * 0.4);
+                }
+            }
+        } else {
+            // Normal random variations (not in final stretch)
+            if (Math.random() < 0.08) {
+                if (Math.random() < 0.5) {
+                    targetSpeed = this.maxSpeed * (0.9 + Math.random() * 0.2);
+                } else {
+                    targetSpeed = this.baseSpeed * (0.7 + Math.random() * 0.3);
+                }
             }
         }
 
