@@ -1129,9 +1129,16 @@ class Game {
             // COLLISIONS
             this.checkCollisions(dt);
 
-            // UI Update
-            const nameEl = document.getElementById('leaderName');
-            if (nameEl) nameEl.innerText = "Leader: " + leader.name;
+            // UI Update - TOP 5 LEADERBOARD
+            for (let i = 0; i < 5; i++) {
+                const lbRow = document.getElementById(`lb${i + 1}`);
+                if (lbRow && sortedRunners[i]) {
+                    const nameSpan = lbRow.querySelector('.lb-name');
+                    if (nameSpan) {
+                        nameSpan.textContent = escapeHtml(sortedRunners[i].name);
+                    }
+                }
+            }
 
             // Update Timer Display
             this.elapsedTime = (Date.now() - this.raceStartTime) / 1000; // Convert to seconds

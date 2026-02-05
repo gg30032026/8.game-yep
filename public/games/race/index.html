@@ -54,11 +54,17 @@
             </div>
         </div>
 
-        <!-- UI LAYER: HUD (In Game) -->
         <div id="hudScreen" class="ui-screen hidden">
             <div class="top-bar">
                 <div class="timer-box">⏱️ <span id="timerDisplay">00:00</span></div>
-                <div class="rank-box">🏆 1st: <span id="leaderName">???</span></div>
+                <div class="leaderboard-box" id="leaderboard">
+                    <div class="lb-title">🏆 TOP 5</div>
+                    <div class="lb-row" id="lb1"><span class="lb-pos">1.</span> <span class="lb-name">---</span></div>
+                    <div class="lb-row" id="lb2"><span class="lb-pos">2.</span> <span class="lb-name">---</span></div>
+                    <div class="lb-row" id="lb3"><span class="lb-pos">3.</span> <span class="lb-name">---</span></div>
+                    <div class="lb-row" id="lb4"><span class="lb-pos">4.</span> <span class="lb-name">---</span></div>
+                    <div class="lb-row" id="lb5"><span class="lb-pos">5.</span> <span class="lb-name">---</span></div>
+                </div>
             </div>
 
             <!-- Mobile Controls / Inventory -->
@@ -107,7 +113,7 @@
     <!-- Ideally handled by AudioContext in JS, but generic tags for backup -->
 
     <!-- Consolidated Script with cache-bust -->
-    <script src="game_v2.js?v=20260205v13"></script>
+    <script src="game_v2.js?v=20260205v14"></script>
 </body>
 
 </html>
