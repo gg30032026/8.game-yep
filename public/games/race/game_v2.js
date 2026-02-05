@@ -965,7 +965,7 @@ class Game {
                 // Allow up to 70 players
                 if (name && this.players.length < 70) {
                     this.players.push({
-                        name: name.substring(0, 20),
+                        name: name.substring(0, 30),
                         color: colors[Math.floor(Math.random() * colors.length)],
                         jockeyColor: `hsl(${Math.random() * 360}, 80%, 50%)`
                     });
