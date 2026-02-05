@@ -1,8 +1,8 @@
 // --- Constants ---
 const filmStrip = document.getElementById('filmStrip');
 const TOTAL_FRAMES_DEMO = 40;
-const FRAME_WIDTH = 150;
-const GAP = 20;
+const FRAME_WIDTH = 188; // 180px content + 4px border each side
+const GAP = 24;
 const ITEM_FULL_WIDTH = FRAME_WIDTH + GAP;
 
 // --- Custom Confirm Modal ---
@@ -210,28 +210,30 @@ function finalizeStop() {
     gameState = 'STOPPED';
     cancelAnimationFrame(animationId);
 
-    // Get viewport width to calculate center offset
-    const viewport = document.querySelector('.film-strip-viewport');
-    const viewportWidth = viewport ? viewport.offsetWidth : window.innerWidth;
+    // The film-strip has padding that already centers frames
+    // Frame N is at center when: scroll = N * ITEM_FULL_WIDTH
+    const centerIndex = Math.round(currentScroll / ITEM_FULL_WIDTH);
+    
+    // Calculate scroll position that puts centerIndex frame at center
+    const snappedScroll = centerIndex * ITEM_FULL_WIDTH;
 
-    // Arrow is at center of viewport
-    const centerOffset = (viewportWidth / 2) - (FRAME_WIDTH / 2);
-    const arrowPosition = currentScroll + centerOffset;
+    console.log('currentScroll:', currentScroll, 'centerIndex:', centerIndex, 'snappedScroll:', snappedScroll);
 
-    // Calculate which frame is directly under the arrow - NO SNAPPING
-    // Floor to get the frame that's mostly under the arrow
-    const rawIndex = Math.floor(arrowPosition / ITEM_FULL_WIDTH);
+    // Animate to snapped position
+    filmStrip.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    filmStrip.style.transform = `translateX(-${snappedScroll}px)`;
 
-    // Modulo to get actual frame in the strip (since frames repeat in cycles)
-    const frameIndex = ((rawIndex % frames.length) + frames.length) % frames.length;
+    // Use centerIndex to determine winner (the frame that will be centered)
+    const frameIndex = ((centerIndex % frames.length) + frames.length) % frames.length;
+    const assetIndex = ((centerIndex % currentAssets.length) + currentAssets.length) % currentAssets.length;
 
-    // Also calculate asset index for the winner
-    const assetIndex = ((rawIndex % currentAssets.length) + currentAssets.length) % currentAssets.length;
+    console.log('frameIndex:', frameIndex, 'assetIndex:', assetIndex, 'winner:', currentAssets[assetIndex]);
 
-    // NO ANIMATION - Just stop exactly where we are
-    // The frame under the arrow is the winner, no need to snap
-
-    highlightFrameByIndex(frameIndex, assetIndex);
+    setTimeout(() => {
+        filmStrip.style.transition = 'none';
+        currentScroll = snappedScroll;
+        highlightFrameByIndex(frameIndex, assetIndex);
+    }, 500);
 }
 
 // ... (Rest of Interaction / Highlight / Fireworks logic is generic and keeps working) ...
@@ -415,7 +417,7 @@ function animateFireworks() {
         fireworks[i].update();
         fireworks[i].draw();
         if (fireworks[i].done) {
-            createParticles(fireworks[i].x, fireworks[i].y, fireworks[i].color);
+            // createParticles(fireworks[i].x, fireworks[i].y, fireworks[i].color);
             fireworks.splice(i, 1);
         }
     }
