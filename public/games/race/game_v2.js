@@ -90,7 +90,7 @@ class Horse {
         this.distanceToLeader = 0;
     }
 
-    update(dt, leaderX = 0, finishX = 3000) {
+    update(dt, leaderX = 0, finishX = 3000, raceElapsed = 0) {
         // Update particles
         this.particles = this.particles.filter(p => {
             p.life -= dt;
@@ -140,42 +140,71 @@ class Horse {
         let targetSpeed = this.baseSpeed;
         this.distanceToLeader = leaderX - this.x;
 
+        // === PERIODIC SURGE: Every 10 seconds, trailing horses get boost ===
+        const surgeWindow = raceElapsed % 10; // 0-10 second cycle
+        const isSurgeTime = surgeWindow >= 8 && surgeWindow <= 10; // Last 2 seconds of each 10s cycle
+        const position = this.racePosition || 0;
+
+        if (isSurgeTime) {
+            // Trailing horses (position 3+) get MASSIVE surge chance
+            if (position >= 3 && this.stamina > 20) {
+                if (Math.random() < 0.5) { // 50% chance per frame during surge window
+                    targetSpeed = this.maxSpeed * 1.8;
+                    if (!this.isSurging) {
+                        console.log(`🚀 ${this.name} (vị trí ${position + 1}) bứt phá!`);
+                        this.isSurging = true;
+                    }
+                }
+            }
+            // Middle pack (position 1-2) also gets surge
+            else if (position >= 1 && position <= 2 && this.stamina > 30) {
+                if (Math.random() < 0.3) {
+                    targetSpeed = this.maxSpeed * 1.5;
+                }
+            }
+            // Leader might stumble during surge time
+            if (position === 0 && Math.random() < 0.2) {
+                targetSpeed = this.baseSpeed * 0.5;
+            }
+        } else {
+            this.isSurging = false;
+        }
+
         // === RUBBER-BANDING: Horses behind get speed boost ===
         if (this.distanceToLeader > 100) {
             // Significantly behind - get a boost!
-            const boostFactor = Math.min(this.distanceToLeader / 500, 0.5); // Up to 50% boost
-            targetSpeed = this.baseSpeed * (1 + boostFactor);
+            const boostFactor = Math.min(this.distanceToLeader / 400, 0.6); // Up to 60% boost
+            targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
 
             // Higher chance of burst when behind
-            if (this.stamina > 30 && Math.random() < 0.15) {
-                targetSpeed = this.maxSpeed * 1.1; // SUPER BURST!
+            if (this.stamina > 30 && Math.random() < 0.12) {
+                targetSpeed = this.maxSpeed * 1.2; // SUPER BURST!
             }
         }
 
-        // === RANDOM SURGE: Positions 5-7 can surge to #1! ===
-        // This makes the race completely unpredictable
+        // === RANDOM POSITION SWAP: Continuous excitement ===
+        // Random micro-bursts every few seconds for position changes
+        if (Math.random() < 0.05 && this.stamina > 25) {
+            targetSpeed = this.maxSpeed * (0.9 + Math.random() * 0.4);
+        }
+
+        // === FINAL SPRINT: Last 500px ===
         const distanceToFinish = finishX - this.x;
         if (distanceToFinish < 500 && distanceToFinish > 0) {
-            // Get current race position (will be set by Game.update)
-            const position = this.racePosition || 0;
-
-            // Positions 5-7 get MASSIVE random surge chance
+            // Positions 4-7 get MASSIVE random surge chance
             if (position >= 4 && position <= 7) {
-                // 40% chance per frame to get SUPER surge!
                 if (Math.random() < 0.4) {
                     targetSpeed = this.maxSpeed * 2.0; // DOUBLE SPEED!
-                    console.log(`🚀 ${this.name} (vị trí ${position + 1}) bùng nổ tốc độ!`);
                 }
             } else if (position >= 1 && position <= 3) {
-                // Middle pack also gets some surge
                 if (Math.random() < 0.25) {
                     targetSpeed = this.maxSpeed * 1.5;
                 }
             }
 
-            // Leaders might stumble (random slowdown)
+            // Leaders might stumble
             if (position === 0 && Math.random() < 0.15) {
-                targetSpeed = this.baseSpeed * 0.6; // Slowdown!
+                targetSpeed = this.baseSpeed * 0.6;
             }
         }
 
@@ -678,7 +707,7 @@ class Renderer {
             this.cameraX += (Math.max(0, targetX) - this.cameraX) * 0.1;
         }
         // Pass leaderX and finishX to each horse for comeback mechanics
-        this.runners.forEach(r => r.update(dt, leaderX, finishX));
+        this.runners.forEach(r => r.update(dt, leaderX, finishX, this.game.elapsedTime || 0));
     }
 
     draw() {
