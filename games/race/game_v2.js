@@ -170,54 +170,54 @@ class Horse {
             this.isSurging = false;
         }
 
-        // === RUBBER-BANDING: Keep horses VERY close together ===
-        // Activate very early (30px behind) and maximum boost to keep pack tight
-        if (this.distanceToLeader > 30) {
-            // Behind - get a strong boost to catch up FAST
-            const boostFactor = Math.min(this.distanceToLeader / 100, 1.0); // Up to 100% boost, very fast scaling
+        // === RUBBER-BANDING: EXTREME - Keep 35+ horses visible ===
+        // Immediately activate when behind and FORCE catch up
+        if (this.distanceToLeader > 20) {
+            // Behind - EXTREME boost to keep pack VERY tight
+            const boostFactor = Math.min(this.distanceToLeader / 50, 1.5); // Up to 150% boost, instant scaling
             targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
 
-            // Very high chance of burst when behind to catch up quickly
-            if (this.stamina > 15 && Math.random() < 0.25) {
-                targetSpeed = this.maxSpeed * 1.4; // CATCH UP BURST!
+            // VERY high burst chance to catch up immediately
+            if (this.stamina > 10 && Math.random() < 0.35) {
+                targetSpeed = this.maxSpeed * 1.5; // INSTANT CATCH UP!
             }
         }
 
-        // === PACK COMPRESSION in final 30 seconds ===
-        // Keep at least 30 horses visible by making trailing horses VERY fast
+        // === PACK COMPRESSION - EXTREME for last 30 seconds ===
+        // FORCE all horses to stay within 200px of leader (screen width)
         const distanceToFinish = finishX - this.x;
-        const isLast30Seconds = distanceToFinish < (finishX * 0.5); // Last half of race
+        const raceProgress = 1 - (distanceToFinish / finishX);
+        const isLast30Seconds = raceProgress > 0.5; // Last half = last ~30s in 60s race
 
-        if (isLast30Seconds && this.distanceToLeader > 50) {
-            // AGGRESSIVE catch up for final stretch
-            targetSpeed = Math.max(targetSpeed, this.maxSpeed * 0.95);
-            if (this.distanceToLeader > 100 && Math.random() < 0.3) {
-                targetSpeed = this.maxSpeed * 1.5; // MEGA CATCH UP!
+        if (isLast30Seconds) {
+            // EXTREME compression - anyone more than 100px behind gets MAX speed
+            if (this.distanceToLeader > 100) {
+                targetSpeed = this.maxSpeed * 1.8; // WARP SPEED to catch up!
+            } else if (this.distanceToLeader > 50) {
+                targetSpeed = Math.max(targetSpeed, this.maxSpeed * 1.2);
             }
         }
 
-        // === RANDOM POSITION SWAP: Continuous excitement ===
-        // Random micro-bursts every few seconds for position changes
-        if (Math.random() < 0.05 && this.stamina > 25) {
-            targetSpeed = this.maxSpeed * (0.9 + Math.random() * 0.4);
+        // === CONSTANT POSITION SWAPPING ===
+        // High frequency random speed changes for exciting position battles
+        if (Math.random() < 0.15) { // 15% chance each frame = constant changes
+            if (Math.random() < 0.5) {
+                targetSpeed = this.maxSpeed * (1.0 + Math.random() * 0.3); // Speed up
+            } else {
+                targetSpeed = this.baseSpeed * (0.7 + Math.random() * 0.3); // Slow down
+            }
         }
 
-        // === FINAL SPRINT: Last 500px ===
+        // === FINAL SPRINT: Last 500px - CHAOS ===
         if (distanceToFinish < 500 && distanceToFinish > 0) {
-            // Positions 4-7 get MASSIVE random surge chance
-            if (position >= 4 && position <= 7) {
-                if (Math.random() < 0.4) {
-                    targetSpeed = this.maxSpeed * 2.0; // DOUBLE SPEED!
-                }
-            } else if (position >= 1 && position <= 3) {
-                if (Math.random() < 0.25) {
-                    targetSpeed = this.maxSpeed * 1.5;
-                }
+            // ALL positions can surge - pure chaos
+            if (Math.random() < 0.3) {
+                targetSpeed = this.maxSpeed * (1.5 + Math.random() * 1.0); // Up to 2.5x speed!
             }
 
-            // Leaders might stumble
-            if (position === 0 && Math.random() < 0.15) {
-                targetSpeed = this.baseSpeed * 0.6;
+            // Random slowdowns for leaders to keep it exciting
+            if (position <= 2 && Math.random() < 0.2) {
+                targetSpeed = this.baseSpeed * 0.5;
             }
         }
 
