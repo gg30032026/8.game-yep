@@ -285,8 +285,7 @@ function startSpin() {
 }
 
 function highlightFrameByIndex(frameIndex, assetIndex) {
-    // Stop background music
-    bgMusic.pause();
+    // Keep playing background music
 
     const targetFrame = frames[frameIndex];
     const winnerAsset = currentAssets[assetIndex];
