@@ -170,16 +170,29 @@ class Horse {
             this.isSurging = false;
         }
 
-        // === RUBBER-BANDING: Keep horses close together ===
-        // Activate earlier (50px behind) and stronger boost to keep pack tight
-        if (this.distanceToLeader > 50) {
-            // Behind - get a boost to catch up
-            const boostFactor = Math.min(this.distanceToLeader / 200, 0.8); // Up to 80% boost, faster scaling
+        // === RUBBER-BANDING: Keep horses VERY close together ===
+        // Activate very early (30px behind) and maximum boost to keep pack tight
+        if (this.distanceToLeader > 30) {
+            // Behind - get a strong boost to catch up FAST
+            const boostFactor = Math.min(this.distanceToLeader / 100, 1.0); // Up to 100% boost, very fast scaling
             targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
 
             // Very high chance of burst when behind to catch up quickly
-            if (this.stamina > 20 && Math.random() < 0.2) {
-                targetSpeed = this.maxSpeed * 1.3; // CATCH UP BURST!
+            if (this.stamina > 15 && Math.random() < 0.25) {
+                targetSpeed = this.maxSpeed * 1.4; // CATCH UP BURST!
+            }
+        }
+
+        // === PACK COMPRESSION in final 30 seconds ===
+        // Keep at least 30 horses visible by making trailing horses VERY fast
+        const distanceToFinish = finishX - this.x;
+        const isLast30Seconds = distanceToFinish < (finishX * 0.5); // Last half of race
+
+        if (isLast30Seconds && this.distanceToLeader > 50) {
+            // AGGRESSIVE catch up for final stretch
+            targetSpeed = Math.max(targetSpeed, this.maxSpeed * 0.95);
+            if (this.distanceToLeader > 100 && Math.random() < 0.3) {
+                targetSpeed = this.maxSpeed * 1.5; // MEGA CATCH UP!
             }
         }
 
@@ -190,7 +203,6 @@ class Horse {
         }
 
         // === FINAL SPRINT: Last 500px ===
-        const distanceToFinish = finishX - this.x;
         if (distanceToFinish < 500 && distanceToFinish > 0) {
             // Positions 4-7 get MASSIVE random surge chance
             if (position >= 4 && position <= 7) {
@@ -684,7 +696,10 @@ class Renderer {
 
         console.log(`TRACK: ${numPlayers} players, laneHeight=${this.laneHeight}px, availableHeight=${availableHeight}px`);
 
-        this.runners = players.map((p, i) => {
+        // Shuffle players to randomize lane positions
+        const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+
+        this.runners = shuffledPlayers.map((p, i) => {
             const horse = new Horse({
                 name: p.name,
                 color: p.color,
