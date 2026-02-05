@@ -1,3 +1,10 @@
+// --- 0. Security Helper ---
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // --- Constants ---
 const filmStrip = document.getElementById('filmStrip');
 const TOTAL_FRAMES_DEMO = 40;
@@ -533,7 +540,7 @@ async function renderFolderList() {
     folders.forEach(folder => {
         const li = document.createElement('li');
         li.className = 'folder-item';
-        li.innerHTML = `<span>${folder.name}</span> <span style="font-size:0.8rem; color:#666;">✎</span>`;
+        li.innerHTML = `<span>${escapeHtml(folder.name)}</span> <span style="font-size:0.8rem; color:#666;">✎</span>`;
         li.onclick = () => selectManageFolder(folder.id, li);
         folderList.appendChild(li);
     });
