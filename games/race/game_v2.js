@@ -12,7 +12,7 @@ class AudioManager {
         // Background music
         this.bgMusic = new Audio('src/The Lone Ranger Theme Song - (320 Kbps).mp3');
         this.bgMusic.loop = true;
-        this.bgMusic.volume = 0.5;
+        this.bgMusic.volume = 1.0;
     }
 
     play(soundName) {
