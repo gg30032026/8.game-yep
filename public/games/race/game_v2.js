@@ -76,6 +76,7 @@ class Horse {
         this.isFalling = false;
         this.fallRotation = 0;
         this.slideVelocity = 0;
+        this.recoveryGraceTimer = 0; // Grace period after standing up
 
         // Attack animation (kick/headbutt)
         this.isAttacking = false;
@@ -132,13 +133,26 @@ class Horse {
                 this.isFalling = false;
                 this.isRecovering = false;
                 this.fallRotation = 0;
+                this.recoveryGraceTimer = 2.0; // 2s grace period after standing
             }
             return;
         }
 
-        // Smooth transition after stun ends - continue recovery if needed
+        // === RECOVERY GRACE PERIOD ===
+        // Horse gradually accelerates after falling, no flying forward
+        if (this.recoveryGraceTimer > 0) {
+            this.recoveryGraceTimer -= dt;
+            const recoveryProgress = 1 - (this.recoveryGraceTimer / 2.0);
+            this.speed = this.baseSpeed * recoveryProgress * 0.7; // Max 70% speed
+            this.x += this.speed * dt;
+            if (this.fallRotation > 0.01) this.fallRotation *= 0.9;
+            else this.fallRotation = 0;
+            return;
+        }
+
+        // Smooth transition after stun ends
         if (this.fallRotation > 0.01) {
-            this.fallRotation *= 0.9; // Continue smooth recovery
+            this.fallRotation *= 0.9;
         } else {
             this.fallRotation = 0;
         }
@@ -185,59 +199,22 @@ class Horse {
             this.isSurging = false;
         }
 
-        // === PACK COMPRESSION - Calculate race progress first ===
+        // === NATURAL RUBBER-BANDING (light, random) ===
+        // No forced pack compression - pure random racing
         const distanceToFinish = finishX - this.x;
-        const raceProgress = 1 - (distanceToFinish / finishX);
-        const isLast30Seconds = raceProgress > 0.5; // Last half = last ~30s in 60s race
-        const isLast10Seconds = raceProgress > 0.83; // Last ~10s
 
-        // === PROGRESSIVE PACK CONTROL ===
-        // 30s-10s cuối: tight pack (~35 horses visible, 150px spread)
-        // 10s cuối: spread out (~10 horses at front, let others fall behind)
-        let MAX_ALLOWED_DISTANCE;
-
-        if (isLast10Seconds) {
-            // Final 10s - let trailing horses fall behind naturally
-            // Only top ~10 will stay close, others spread out
-            if (this.racePosition < 10) {
-                MAX_ALLOWED_DISTANCE = 200; // Top 10 stay close
-            } else {
-                MAX_ALLOWED_DISTANCE = 800 + this.racePosition * 20; // Others spread out
-            }
-        } else if (isLast30Seconds) {
-            MAX_ALLOWED_DISTANCE = 150; // Keep pack tight
-        } else {
-            MAX_ALLOWED_DISTANCE = 300;
-        }
-
-        // Smooth catch-up using LERP instead of teleport (prevents jerky movement)
-        if (this.distanceToLeader > MAX_ALLOWED_DISTANCE) {
-            // Calculate target position
-            const targetX = leaderX - MAX_ALLOWED_DISTANCE + 20;
-            // Smoothly move towards target (lerp factor 0.1 = 10% per frame)
-            this.x = this.x + (targetX - this.x) * 0.15;
-            this.distanceToLeader = leaderX - this.x;
-        }
-
-        // === RUBBER-BANDING: EXTREME ===
-        if (this.distanceToLeader > 10) {
-            // Behind - EXTREME boost
-            const boostFactor = Math.min(this.distanceToLeader / 30, 2.0); // Up to 200% boost
+        if (this.distanceToLeader > 300) {
+            // Light catch-up boost for very far behind horses
+            const boostFactor = Math.min(this.distanceToLeader / 500, 0.4); // Max 40% boost
             targetSpeed = Math.max(targetSpeed, this.baseSpeed * (1 + boostFactor));
-
-            // VERY high burst chance
-            if (Math.random() < 0.4) {
-                targetSpeed = this.maxSpeed * 1.6;
-            }
         }
 
-        // === CONSTANT POSITION SWAPPING ===
-        // High frequency random speed changes for exciting position battles
-        if (Math.random() < 0.2) { // 20% chance each frame = constant changes
+        // === RANDOM SPEED VARIATIONS ===
+        if (Math.random() < 0.08) { // 8% chance - more natural
             if (Math.random() < 0.5) {
-                targetSpeed = this.maxSpeed * (1.0 + Math.random() * 0.4); // Speed up
+                targetSpeed = this.maxSpeed * (0.9 + Math.random() * 0.2);
             } else {
-                targetSpeed = this.baseSpeed * (0.6 + Math.random() * 0.4); // Slow down
+                targetSpeed = this.baseSpeed * (0.7 + Math.random() * 0.3);
             }
         }
 
