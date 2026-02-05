@@ -210,9 +210,12 @@ class Horse {
             MAX_ALLOWED_DISTANCE = 300;
         }
 
+        // Smooth catch-up using LERP instead of teleport (prevents jerky movement)
         if (this.distanceToLeader > MAX_ALLOWED_DISTANCE) {
-            // TELEPORT to catch up! Force position closer to leader
-            this.x = leaderX - MAX_ALLOWED_DISTANCE + Math.random() * 50;
+            // Calculate target position
+            const targetX = leaderX - MAX_ALLOWED_DISTANCE + 20;
+            // Smoothly move towards target (lerp factor 0.1 = 10% per frame)
+            this.x = this.x + (targetX - this.x) * 0.15;
             this.distanceToLeader = leaderX - this.x;
         }
 
