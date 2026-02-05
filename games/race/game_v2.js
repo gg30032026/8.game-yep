@@ -78,6 +78,8 @@ class Horse {
         this.slideVelocity = 0;
         this.recoveryGraceTimer = 0; // Grace period after standing up
         this.isMegaBoosting = false; // Track mega boost state
+        this.isSuperMegaBoosting = false; // Final 10s random buff
+
 
         // Attack animation (kick/headbutt)
         this.isAttacking = false;
@@ -186,6 +188,15 @@ class Horse {
             }
         } else {
             this.isMegaBoosting = false;
+        }
+
+        // === SUPER MEGA BOOST: Final 10s random buff for 5 horses (Rank 25+) ===
+        if (this.isSuperMegaBoosting) {
+            targetSpeed = this.maxSpeed * 5.0; // 5x speed! INSANE
+            this.stamina = 100; // Infinite stamina
+            if (Math.random() < 0.1) {
+                console.log(`🚀🚀 ${this.name} đang SUPER MEGA BUFF!`);
+            }
         }
 
         // === PERIODIC SURGE: Every 10 seconds, trailing horses get boost ===
@@ -1013,6 +1024,7 @@ class Game {
         this.finishX = 12000; // Will be calculated based on raceDuration (duration * 200)
         this.raceStartTime = 0; // Track when race started
         this.elapsedTime = 0; // Track elapsed race time
+        this.finalBuffTriggered = false; // Flag for final 10s buff
 
         this.initLobbyEvents();
         this.loop = this.loop.bind(this);
@@ -1177,6 +1189,26 @@ class Game {
 
             // === FINAL SHOWDOWN: Last 500m (~3s) = STICK BATTLE! ===
             const distanceToFinish = finishX - leader.x;
+            const raceProgress = 1 - (distanceToFinish / finishX); // 0 to 1
+            const isLast10Seconds = raceProgress > 0.83; // Approx last 10s
+
+            // === TRIGGER FINAL 10s SUPER BUFF ===
+            if (isLast10Seconds && !this.finalBuffTriggered) {
+                this.finalBuffTriggered = true;
+                // Select 5 random horses from rank 25+ (index 24+)
+                // Ensure we have enough horses
+                if (sortedRunners.length > 24) {
+                    const eligible = sortedRunners.slice(24);
+                    // Shuffle and pick 5
+                    const luckyHorses = eligible.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+                    luckyHorses.forEach(h => {
+                        h.isSuperMegaBoosting = true;
+                        console.log(`🌟 SUPER MEGA BUFF ACTIVATED: ${h.name} (Rank ${h.racePosition + 1})`);
+                    });
+                }
+            }
+
             if (distanceToFinish < 500 && distanceToFinish > 0) {
                 this.triggerFinalShowdown(dt);
             }
