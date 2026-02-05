@@ -174,14 +174,14 @@ class Horse {
         // === MEGA BOOST: Every 20 seconds, positions 35-36 get SUPER boost to reach top 3 ===
         const megaBoostCycle = Math.floor(raceElapsed / 20); // Which 20s cycle we're in
         const megaBoostWindow = raceElapsed % 20;
-        const isMegaBoostTime = megaBoostWindow >= 0 && megaBoostWindow <= 5; // First 5 seconds of each 20s cycle
+        const isMegaBoostTime = megaBoostWindow >= 0 && megaBoostWindow <= 7; // First 5 seconds of each 20s cycle
 
-        if (isMegaBoostTime && (position === 34 || position === 35)) {
+        if (isMegaBoostTime && (position >= 32 && position <= 35)) {
             // MEGA BOOST - make these horses fly to top 3!
-            targetSpeed = this.maxSpeed * 3.0; // 3x max speed!
+            targetSpeed = this.maxSpeed * 4.5; // 3x max speed!
             this.stamina = 100; // Full stamina during boost
             if (!this.isMegaBoosting) {
-                console.log(`🔥🔥 MEGA BOOST: ${this.name} (vị trí ${position + 1}) bứt phá lên top!`);
+                console.log(`🔥🔥 MEGA BOOST: ${this.name} (vị trí ${position + 1}) bứt phá thần tốc!`);
                 this.isMegaBoosting = true;
             }
         } else {
